@@ -92,15 +92,27 @@
       if (e.key === 'Enter') {
         const vraag = input.value.trim();
         if (!vraag) return;
+
         messages.push({ sender: 'user', text: vraag });
         renderMessages();
-
-        // Simuleer backend-antwoord
-        const antwoord = `(simulatie): je zei "${vraag}"`;
-        messages.push({ sender: 'bot', text: antwoord });
-        renderMessages();
-
         input.value = '';
+
+        try {
+          const response = await fetch('https://vijfp.app.n8n.cloud/webhook-test/ai-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: vraag })
+          });
+
+          const data = await response.json();
+          const antwoord = data.reply || '(geen antwoord ontvangen)';
+          messages.push({ sender: 'bot', text: antwoord });
+          renderMessages();
+
+        } catch (err) {
+          messages.push({ sender: 'bot', text: 'Er ging iets mis bij het ophalen van een antwoord.' });
+          renderMessages();
+        }
       }
     });
   </script>
