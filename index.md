@@ -1,3 +1,120 @@
----
-title: Welcome to my blog!
----
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    .logo {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      height: 40px;
+      opacity: 0.8;
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+    }
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .message {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      background: #f0f0f0;
+      max-width: 90%;
+    }
+    .user {
+      align-self: flex-end;
+      background: #d0ebff;
+    }
+    .bot {
+      align-self: flex-start;
+      background: #e2e2e2;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <img src="4b3c65b0ef53d6bf4af7c57d90491349.png" alt="Logo" class="logo">
+  <div class="container">
+    <div class="chat-history" id="chat-history"></div>
+    <input type="text" id="input" placeholder="Typ hier je vraag...">
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const chatHistory = document.getElementById('chat-history');
+    let messages = [];
+
+    function renderMessages() {
+      chatHistory.innerHTML = '';
+      for (const msg of messages) {
+        const div = document.createElement('div');
+        div.className = `message ${msg.sender}`;
+        div.textContent = msg.text;
+        chatHistory.appendChild(div);
+      }
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    input.addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        const vraag = input.value.trim();
+        if (!vraag) return;
+
+        messages.push({ sender: 'user', text: vraag });
+        renderMessages();
+        input.value = '';
+
+        try {
+          const response = await fetch('https://vijfp.app.n8n.cloud/webhook-test/ai-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: vraag })
+          });
+
+          const data = await response.json();
+          const antwoord = data.reply || '(geen antwoord ontvangen)';
+          messages.push({ sender: 'bot', text: antwoord });
+          renderMessages();
+
+        } catch (err) {
+          messages.push({ sender: 'bot', text: 'Er ging iets mis bij het ophalen van een antwoord.' });
+          renderMessages();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
